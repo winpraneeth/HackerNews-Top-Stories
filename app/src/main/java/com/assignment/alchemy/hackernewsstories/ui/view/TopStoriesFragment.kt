@@ -43,7 +43,7 @@ class TopStoriesFragment : AbstractFragment(), TopStoriesContract.View, Detachab
         resultsReceiver = DetachableResultsReceiver(Handler())
         resultsReceiver.setReceiver(this)
 
-        context?.let { topStoriesPresenter.getTopStories(it, resultsReceiver) }
+        getTopStories()
 
     }
 
@@ -55,6 +55,22 @@ class TopStoriesFragment : AbstractFragment(), TopStoriesContract.View, Detachab
         this.context?.let {
            stories_list_recycler_view.addItemDecoration(PaddedItemDecoration(it, R.dimen.margin16dp))
         }
+    }
+
+    private fun getTopStories() {
+        context?.let {
+            context?.let {
+                TopStoriesIntentService.buildGetTopStoriesIntent(
+                        it,
+                        resultsReceiver
+                )
+            }?.let { it1 ->
+                TopStoriesIntentService.enqueueWork(
+                        it,
+                        it1)
+            }
+        }
+
     }
 
     override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {

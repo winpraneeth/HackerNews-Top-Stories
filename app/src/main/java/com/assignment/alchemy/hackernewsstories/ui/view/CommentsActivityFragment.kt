@@ -13,28 +13,18 @@ import com.assignment.alchemy.hackernewsstories.model.Comment
 import com.assignment.alchemy.hackernewsstories.model.Story
 import com.assignment.alchemy.hackernewsstories.service.DetachableResultsReceiver
 import com.assignment.alchemy.hackernewsstories.service.TopStoriesIntentService
-import com.assignment.alchemy.hackernewsstories.ui.presenter.CommentsContract
 import kotlinx.android.synthetic.main.fragment_comments.*
 import java.util.ArrayList
-import javax.inject.Inject
 
 /**
  * A placeholder fragment containing a simple view.
  */
 class CommentsActivityFragment : AbstractFragment(), DetachableResultsReceiver.Receiver {
 
-    @Inject
-    lateinit var commentsPresenter: CommentsContract.Presenter
-
     private var commentsIds: ArrayList<Int>? = null
     private var story: Story? = null
     private lateinit var resultsReceiver: DetachableResultsReceiver
     var commentsAdapter: CommentsAdapter? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        daggerInject()
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,7 +33,7 @@ class CommentsActivityFragment : AbstractFragment(), DetachableResultsReceiver.R
         resultsReceiver = DetachableResultsReceiver(Handler())
         resultsReceiver.setReceiver(this)
 
-        context?.let { commentsPresenter.getComments(it, commentsIds, resultsReceiver) }
+        getComments(commentsIds)
 
     }
 
@@ -54,6 +44,22 @@ class CommentsActivityFragment : AbstractFragment(), DetachableResultsReceiver.R
         comments_list_recycler_view?.adapter = commentsAdapter
         this.context?.let {
             comments_list_recycler_view.addItemDecoration(PaddedItemDecoration(it, R.dimen.margin16dp))
+        }
+    }
+
+    private fun getComments(commentsIds: ArrayList<Int>?) {
+        context?.let {
+            context?.let {
+                TopStoriesIntentService.buildGetCommentsIntent(
+                        it,
+                        commentsIds,
+                        resultsReceiver
+                )
+            }?.let { it1 ->
+                TopStoriesIntentService.enqueueWork(
+                        it,
+                        it1)
+            }
         }
     }
 
@@ -80,10 +86,6 @@ class CommentsActivityFragment : AbstractFragment(), DetachableResultsReceiver.R
         }
 
         var FRAGMENT_TAG = "CommentsActivityFragment"
-    }
-
-    private fun daggerInject() {
-        TopStoriesComponentProvider.INSTANCE.getComponent().inject(this)
     }
 
     override fun getLayoutId(): Int {
